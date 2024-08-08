@@ -1,0 +1,42 @@
+---
+- hosts: localhost
+  become: true
+  tasks:
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Install MySQL server
+      apt:
+        name: mysql-server
+        state: present
+
+    - name: Start MySQL service
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Create MySQL database
+      mysql_db:
+        name: aws_instructor
+        state: present
+
+    - name: Create MySQL user
+      mysql_user:
+        name: instructor
+        password: password
+        priv: 'aws_instructor.*:ALL'
+        state: present
+
+    - name: Copy HTML files to Apache root
+      copy:
+        src: /home/ubuntu/html/
+        dest: /var/www/html/
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Run SQL file to create tables
+      command: mysql -u instructor -ppassword aws_instructor < /home/ubuntu/aws_provisioning.sql
